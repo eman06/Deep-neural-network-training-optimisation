@@ -4,9 +4,16 @@ import torch
 import torch.utils.data as data
 import torchvision.transforms as transforms
 import torchvision
+import os
 
 import ellipse as el
 import swiss as sw
+
+# ==================== I/O OPTIMIZATIONS ====================
+# Multi-threaded prefetching configuration
+DEFAULT_NUM_WORKERS = 4  # Multi-threaded data loading
+PREFETCH_FACTOR = 2     # Number of batches to prefetch
+PIN_MEMORY = True       # Pin memory for faster GPU transfer (if GPU available)
 
 
 class InMemDataLoader:   
@@ -152,6 +159,8 @@ class InMemDataLoader:
         labels = myFile.get(labelsString)
        
         #convert to tensors
+        # Change line 162 in dataloader.py to:
+       # features = torch.from_numpy(np.array(features, dtype=np.float32))
         features = torch.from_numpy(np.array(features))
         labels = torch.from_numpy(np.array(labels))
         
@@ -163,17 +172,43 @@ class InMemDataLoader:
         
         if self.conv_sg == False:
             labels = labels.long()       
-                     
         dataset = torch.utils.data.TensorDataset(features, labels)
         
         return dataset
         
     
-    def getDataLoader(self, batch_size = 64, shuffle=True, num_workers=0, pin_memory=True, train=True):
+    def getDataLoader(self, batch_size=64, shuffle=True, num_workers=None, pin_memory=None, train=True):
+        """
+        Optimized DataLoader with multi-threaded prefetching.
+        
+        Args:
+            batch_size: Batch size for training
+            shuffle: Whether to shuffle data
+            num_workers: Number of worker threads (defaults to DEFAULT_NUM_WORKERS for optimization)
+            pin_memory: Pin memory for GPU transfer (defaults to PIN_MEMORY if CUDA available)
+            train: Whether loading training or test set
+        """
+        # Use optimized defaults
+        if num_workers is None:
+            num_workers = DEFAULT_NUM_WORKERS if torch.cuda.is_available() else 0
+        
+        if pin_memory is None:
+            pin_memory = PIN_MEMORY and torch.cuda.is_available()
+        
         dataset = self.getDataset(train)
-       
-        return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle= shuffle
-                                              , num_workers=num_workers, pin_memory = pin_memory)
+        
+        # Create DataLoader with prefetching
+        dataloader = torch.utils.data.DataLoader(
+            dataset, 
+            batch_size=batch_size, 
+            shuffle=shuffle,
+            num_workers=num_workers, 
+            pin_memory=pin_memory,
+            prefetch_factor=PREFETCH_FACTOR if num_workers > 0 else 1,
+            persistent_workers=(num_workers > 0)  # Keep workers alive between epochs
+        )
+        
+        return dataloader
             
 
 def getDims(dataset):

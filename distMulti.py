@@ -13,7 +13,12 @@ from sklearn.metrics import mean_squared_error as mse
 import itertools
 import multiprocessing as mp
 import os
+from torch.profiler import profile, record_function, ProfilerActivity
 
+# ==================== PROFILING & BENCHMARKING ====================
+ENABLE_PROFILER = False  # Set to True to enable detailed profiling
+PROFILE_BATCH_SIZE = 10  # Number of batches to profile
+# ====================================================================
 
 #dnn codebase
 import ResNet as res

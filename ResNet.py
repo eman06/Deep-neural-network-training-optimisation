@@ -11,6 +11,16 @@ from torch.autograd import Variable
 import time
 import copy
 
+# ==================== OPTIMIZATION FLAGS ====================
+USE_MIXED_PRECISION = torch.cuda.is_available()  # Enable mixed precision on GPU
+USE_GRADIENT_ACCUMULATION = False  # Accumulate gradients over multiple batches
+BENCHMARK_MODE = True  # Enable cuDNN benchmarking for consistent GPU performance
+
+if USE_MIXED_PRECISION:
+    torch.backends.cudnn.benchmark = BENCHMARK_MODE
+    torch.backends.cudnn.deterministic = False  # Slightly faster but non-deterministic
+
+
 class ResNet(nn.Module):
     #use super to initialise the base class ClassName(object):
         """ The ResNet class inherits from the nn.Module class.
@@ -191,12 +201,22 @@ class ResNet(nn.Module):
                     t = time.perf_counter()
                     #clear gradient buffers
                     optimiser.zero_grad()     
-                    torch.cuda.synchronize()
-                    tmp_forward = time.perf_counter()    
-                    outputs = self(inputs, f_step)
-                  
-                    loss = error_func(outputs, labels)
-                    torch.cuda.synchronize()
+                    if torch.cuda.is_available():
+                        torch.cuda.synchronize()
+                    tmp_forward = time.perf_counter()
+                    
+                    # ==================== MIXED PRECISION FORWARD PASS ====================
+                    if USE_MIXED_PRECISION:
+                        with torch.cuda.amp.autocast():
+                            outputs = self(inputs, f_step)
+                            loss = error_func(outputs, labels)
+                    else:
+                        outputs = self(inputs, f_step)
+                        loss = error_func(outputs, labels)
+                    # =====================================================================
+                    
+                    if torch.cuda.is_available():
+                        torch.cuda.synchronize()
                     forward_t += time.perf_counter() - tmp_forward
                     #add forward propagation regularisation term
                     #if reg_f == True:                        
@@ -205,7 +225,8 @@ class ResNet(nn.Module):
                     #if reg_c == True:
                      #   loss +=  alpha_c*self.class_reg()
                   
-                    torch.cuda.synchronize()
+                    if torch.cuda.is_available():
+                        torch.cuda.synchronize()
                     tmp_b = time.perf_counter()
                     #calculate the gradients for the backpropagations
                     loss.backward()
@@ -213,7 +234,8 @@ class ResNet(nn.Module):
                     #update the weights
                     optimiser.step()
                
-                    torch.cuda.synchronize()
+                    if torch.cuda.is_available():
+                        torch.cuda.synchronize()
                     back_t += time.perf_counter() - tmp_b
                     epoch_loss += loss.item()
                     i += 1
