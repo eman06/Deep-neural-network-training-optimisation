@@ -144,37 +144,64 @@ class InMemDataLoader:
                        
                
         #open file
-        myFile = h5py.File(self.dataString, 'r', self.driver)
-        
-        if train == True:         
-            inputString = "train_inputs"
-            labelsString = "train_labels"
-        
-        else:
-            inputString = "test_inputs"
-            labelsString = "test_labels"
-        
-        #get hdf5 datsets
-        features = myFile.get(inputString)
-        labels = myFile.get(labelsString)
-       
-        #convert to tensors
-        # Change line 162 in dataloader.py to:
-       # features = torch.from_numpy(np.array(features, dtype=np.float32))
-        features = torch.from_numpy(np.array(features))
-        labels = torch.from_numpy(np.array(labels))
-        
-        #close file to ensure dataset is in memory
-        myFile.close()
-        
-        #conver to correct datatypes
-        features = features.float()
-        
-        if self.conv_sg == False:
-            labels = labels.long()       
-        dataset = torch.utils.data.TensorDataset(features, labels)
-        
-        return dataset
+        try:
+            myFile = h5py.File(self.dataString, 'r', self.driver)
+            
+            if train == True:         
+                inputString = "train_inputs"
+                labelsString = "train_labels"
+            
+            else:
+                inputString = "test_inputs"
+                labelsString = "test_labels"
+            
+            #get hdf5 datsets
+            features = myFile.get(inputString)
+            labels = myFile.get(labelsString)
+           
+            # Check if data exists and is valid
+            if features is None or labels is None or features.shape[0] == 0:
+                raise ValueError("HDF5 file is incomplete or missing data")
+            
+            #convert to tensors
+            features = torch.from_numpy(np.array(features, dtype=np.float32))
+            labels = torch.from_numpy(np.array(labels, dtype=np.int64))
+            
+            #close file to ensure dataset is in memory
+            myFile.close()
+            
+            #conver to correct datatypes
+            features = features.float()
+            
+            if self.conv_sg == False:
+                labels = labels.long()       
+            dataset = torch.utils.data.TensorDataset(features, labels)
+            
+            return dataset
+        except:
+            # Fallback: download from torchvision for MNIST/CIFAR10/CIFAR100
+            print(f"HDF5 file incomplete, downloading {self.dataset} from torchvision...")
+            if self.dataset == "MNIST":
+                import torchvision.transforms as transforms
+                transform = transforms.Compose([
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.1307,), (0.3081,))
+                ])
+                dataset = torchvision.datasets.MNIST('./data/MNIST', train=train, download=True, transform=transform)
+                return dataset
+            elif self.dataset in ["CIFAR10", "CIFAR100"]:
+                import torchvision.transforms as transforms
+                transform = transforms.Compose([
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                ])
+                if self.dataset == "CIFAR10":
+                    dataset = torchvision.datasets.CIFAR10('./data/CIFAR10', train=train, download=True, transform=transform)
+                else:
+                    dataset = torchvision.datasets.CIFAR100('./data/CIFAR100', train=train, download=True, transform=transform)
+                return dataset
+            else:
+                raise
         
     
     def getDataLoader(self, batch_size=64, shuffle=True, num_workers=None, pin_memory=None, train=True):
@@ -204,7 +231,7 @@ class InMemDataLoader:
             shuffle=shuffle,
             num_workers=num_workers, 
             pin_memory=pin_memory,
-            prefetch_factor=PREFETCH_FACTOR if num_workers > 0 else 1,
+            prefetch_factor=PREFETCH_FACTOR if num_workers > 0 else None,
             persistent_workers=(num_workers > 0)  # Keep workers alive between epochs
         )
         

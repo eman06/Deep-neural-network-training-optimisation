@@ -41,10 +41,10 @@ def main(argv):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
     
-    dataset_name = "CIFAR10" # choose from MNIST, CIFAR10, CIFAR100, ELLIPSE, SWISS
+    dataset_name = "MNIST" # choose from MNIST, CIFAR10, CIFAR100, ELLIPSE, SWISS
     #choose model
     choice = "v" # "v"
-    gpu = True
+    gpu = torch.cuda.is_available()
     conv = True
     
     batch_size = 256 #1024
@@ -87,10 +87,12 @@ def main(argv):
     #train
     if gpu == True:
         model.to(device)
-        torch.cuda.synchronize()
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
     train_time = time.perf_counter()
     model.train(loader, error_func, learn_rate, epochs, begin, end, step, reg_f, alpha_f, reg_c, alpha_c, graph)
-    torch.cuda.synchronize()
+    if gpu == True and torch.cuda.is_available():
+        torch.cuda.synchronize()
     train_time = time.perf_counter() - train_time
     
     result_train = model.test(loader, begin = 0, end = 10000, f_step = step)
