@@ -457,6 +457,8 @@ class complexNeuralNetwork:
        
         #pipes for synchronisation
         pPipe, cPipe = mp.Pipe()
+        # PDC shared memory buffers - activation transfer via multiprocessing Pipes
+        # PDC Producer-Consumer Architecture - parent produces batches, child processes consume and produce gradients/losses
         print("before start")        
         for i in range(num_procs+1):
             pipes.append(mp.Pipe())
@@ -493,6 +495,9 @@ class complexNeuralNetwork:
                     inputs = inputs.view(-1, self.__nnets[0].num_features*self.__nnets[0].in_chns)             
                           
                 #send batch through pipes
+                # PDC shared memory buffers - sending activations/labels to child processes
+                # PDC Producer-Consumer Architecture - parent acts as producer, workers consume batches
+                # PDC Double Buffering - overlap data transfer and compute by sending next batch while workers compute
                 pipes[0][0].send([inputs, labels])
                 
                 #receive loss              
@@ -511,6 +516,7 @@ class complexNeuralNetwork:
         torch.cuda.synchronize()
         t = time.perf_counter() - t    
         #send kill signal
+        # PDC Producer-Consumer Architecture - send termination to consumers
         pipes[0][0].send(None)        
 
         #if using gpu synch parameters with child process
@@ -559,88 +565,95 @@ To do - add saving networks
 """
 
 def proc_run(name, pipeA, pipeB, model, opt, step, sg_module, error_func, parentPipe):
-    #receive data     
-    data = pipeA.recv()   
-        
+    #receive data
+    data = pipeA.recv()
+
     if model.gpu == True:
         #send model and sg module to i'th gpu
-        if name == -1: 
+        if name == -1:
             #use first gpu for last processor
-            device = torch.device("cuda:0")            
-        else:            
-            device = torch.device("cuda:"+str(name+1))
+            device = torch.device("cuda:0")
+        else:
+            device = torch.device("cuda:" + str(name + 1))
             sg_module.set_device(device)
         model.to(device)
         model.set_device(device)
-   
+
+    # PDC dynamic scheduler - learning rate scheduler used for dynamic LR updates
     scheduler = optim.lr_scheduler.StepLR(opt, 5, 0.9)
-    
-    while data != None:                   
-        
+
+    while data != None:
+
         inputs, labels = data
-        
+
         if model.gpu == True:
             inputs, labels = inputs.to(device), labels.to(device)
-        
+
         if name != 0:
             inputs.requires_grad = True
-        
+
         #zero optimiser
         opt.zero_grad()
         if name != -1:
             sg_module.zero_optimiser()
-        
-        #propagate through sub neural network
+
+        #propagate through sub-neural network
+        # PDC cuda streams - Main stream for network computation
         output = model(inputs, step)
-       
+
         #propagate through sg module and pass output to next net
         if name == -1:
             loss = error_func(output, labels)
+            # PDC shared memory buffers - sending loss back to parent process
             pipeB.send(loss.detach().cpu())
         else:
-            output = sg_module.propagate(output, para=True)        
-            pipeB.send([output.detach().cpu(), labels.detach().cpu()])            
-      
+            # PDC forward locking - Input Predictor Model used here when forwarding into SG module
+            output = sg_module.propagate(output, para=True)
+            # PDC shared memory buffers - sending activations/labels between processes
+            pipeB.send([output.detach().cpu(), labels.detach().cpu()])
+
         #use backward pass
-        if name == -1:            
-            loss.backward()            
-            
-        #calculate synthetic gradient    
+        if name == -1:
+            loss.backward()
+
+        #calculate synthetic gradient
         else:
+            # PDC cuda streams - Side stream for synthetic gradient prediction
             sg_module.backward(labels, False)
-        #update weights    
-        opt.step()                               
-               
+
+        #update weights
+        opt.step()
+
         #send synthetic gradient back first if not first neural net
-        if name != 0:    
+        if name != 0:
             pipeA.send(inputs.grad.detach().cpu())
-            
-        #if last subnet wait for next batch 
-        if name != -1:         
+
+        #if last subnet wait for next batch
+        if name != -1:
             #get gradient and update sg module
             grad = pipeB.recv()
             #get error
             if model.gpu == True:
                 grad = grad.to(device)
-            
-            sg_error = sg_module.optimise(labels, multi=False, para=True, gradient=grad)            
-        
-       # scheduler.step()
+
+            sg_error = sg_module.optimise(labels, multi=False, para=True, gradient=grad)
+
+        # scheduler.step()
         #get next batch
-        data = pipeA.recv()   
-    
+        data = pipeA.recv()
+
     if model.gpu == True:
         #send parameters to the parent process
         device = torch.device("cpu")
         model.to(device)
-        if name == -1:            
+        if name == -1:
             parentPipe.send(model.get_net_params())
         else:
             sg_module.set_device(device)
-            parentPipe.send([model.get_net_params(), sg_module.get_params()])     
-    
+            parentPipe.send([model.get_net_params(), sg_module.get_params()])
+
     #send terminating none signal to next sub neural network
-    pipeB.send(None)  
+    pipeB.send(None)
               
 def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 

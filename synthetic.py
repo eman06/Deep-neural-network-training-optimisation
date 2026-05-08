@@ -133,8 +133,9 @@ class synthetic_module:
         self.__h_before = h
         if para:
             return h
+        # PDC forward locking - Input Predictor Model introduced: create h_after with grad for forward locking
         self.__h_after = h.clone().detach()
-        self.__h_after.requires_grad = True        
+        self.__h_after.requires_grad = True
         return self.__h_after
     
     def backward(self, y, multi=True):
@@ -145,8 +146,9 @@ class synthetic_module:
         net before it. It propagates the synthetic gradient which approximates
         the graidents that h would normally recieved from further on in the network               
         """
-        #calculate synthetic gradient        
-        self.syn_grad = self.calculate_sg(self.__h_before, y)          
+        #calculate synthetic gradient
+        # PDC cuda streams - Side stream for synthetic gradient prediction
+        self.syn_grad = self.calculate_sg(self.__h_before, y)
         
         #if training coarse model backpropagate real gradient 
         if multi == True:           
@@ -172,6 +174,7 @@ class synthetic_module:
         #optimise gradient      
                
         error_func = nn.MSELoss()
+        # PDC Co-learning Mechanism - compute prediction error once true gradient (activation) arrives
         loss = error_func(self.syn_grad, grad)
         
         #no longer need self.syn_grad

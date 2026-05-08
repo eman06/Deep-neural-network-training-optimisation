@@ -228,6 +228,7 @@ class InMemDataLoader:
         dataset = self.getDataset(train)
         
         # Create DataLoader with prefetching
+        # PDC Double Buffering - overlap data loading and computation using prefetch_factor and persistent workers
         dataloader = torch.utils.data.DataLoader(
             dataset, 
             batch_size=batch_size, 

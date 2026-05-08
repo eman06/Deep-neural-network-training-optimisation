@@ -166,7 +166,8 @@ class ResNet(nn.Module):
             if reg_f == True:
                 decay_rate = alpha_f           
               
-            optimiser = optim.Adam(params, lr = learn_rate, weight_decay=decay_rate)           
+            optimiser = optim.Adam(params, lr = learn_rate, weight_decay=decay_rate)
+            # PDC dynamic scheduler - learning rate scheduler for dynamic updates
             scheduler = optim.lr_scheduler.StepLR(optimiser, 5, 0.9)
             
             rounds, losses = [], []
