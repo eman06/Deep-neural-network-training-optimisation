@@ -28,7 +28,7 @@ reg_f = True
 reg_c = False
 alpha_f = 0.0001
 alpha_c = 0.01
-gpu = True
+gpu = False
 conv = False
 
 # Setup
