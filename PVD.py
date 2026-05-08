@@ -32,7 +32,7 @@ class PVD:
         self.device = device
         self.num_proc = num_proc
        
-    def set_models(self, N = 3, num_features = 2, num_classes = 2, func_f = torch.tanh, func_c =F.softmax, weights = None, bias = None, gpu=True, choice = None, gamma = 0.01):
+    def set_models(self, N = 3, num_features = 2, num_classes = 2, func_f = torch.tanh, func_c =F.softmax, weights = None, bias = None, gpu=False, choice = None, gamma = 0.01):
         """
         allows the user to set the model choices defaults to resnet
         'a' - antisymmetric resnet
@@ -50,7 +50,7 @@ class PVD:
 
         self.direction_model = self.create_model(N, num_features, num_classes, func_f, func_c, weights, bias, gpu, choice, gamma)
 
-    def create_model(self, N = 3, num_features = 2, num_classes = 2, func_f = torch.tanh, func_c =F.softmax, weights = None, bias = None, gpu=True, choice = None, gamma = 0.01):
+    def create_model(self, N = 3, num_features = 2, num_classes = 2, func_f = torch.tanh, func_c =F.softmax, weights = None, bias = None, gpu=False, choice = None, gamma = 0.01):
         """
         allows the user to set the model choices defaults to resnet
         'a' - antisymmetric resnet
@@ -316,7 +316,7 @@ def main():
     #set the flag for the database you want equal to trye
     conv = False #
     dataset_name = "ELLIPSE" #choose from MNIST, CIFAR10, CIFAR100, ELLIPSE, SWISS
-    gpu=True
+    gpu=False
 
     #architecture choices
     num_proc =  2
