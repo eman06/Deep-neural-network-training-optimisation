@@ -81,7 +81,7 @@ class ellipse:
     def get_examples(self):
         return self.examples
 
-    def set_model(self, N = 3, num_features = 2, num_classes = 2, func_f = torch.tanh, func_c =F.softmax, weights = None, bias = None, gpu=True, choice = None, gamma = 0.01):
+    def set_model(self, N = 3, num_features = 2, num_classes = 2, func_f = torch.tanh, func_c =F.softmax, weights = None, bias = None, gpu=False, choice = None, gamma = 0.01):
         """
         allows the user to set the model choices defaults to resnet
         'a' - antisymmetric resnet
@@ -178,7 +178,7 @@ def main():
   
     reg_f = False
     reg_c = False
-    gpu = True
+    gpu = False
     #-----------hyper parameters
     learn_rate = 0.2
     step = .05# 0.00005
