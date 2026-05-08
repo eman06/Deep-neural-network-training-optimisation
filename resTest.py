@@ -44,7 +44,7 @@ def main():
     step = 1.0
     alpha = 0.0001
     epochs = 50
-    gpu = True
+    gpu = False
     
     N = 4
     batch_size = 256
