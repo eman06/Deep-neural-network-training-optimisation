@@ -14,7 +14,7 @@ import ResNet as res
 class Leapfrog(res.ResNet):
 
 
-    def __init__(self, device, N, num_features, num_classes, func_f, func_c, weights = None, bias = None, gpu = True):
+    def __init__(self, device, N, num_features, num_classes, func_f, func_c, weights = None, bias = None, gpu = False):
         """
         It is initialised with
             N - number of layers
