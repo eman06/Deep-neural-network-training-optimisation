@@ -113,7 +113,8 @@ class ellipse:
 
         #set parameters to gpu
         if gpu == True:
-            self.model.to(self.device)
+                # //GPU USED HERE - move model parameters to GPU
+                self.model.to(self.device)
 
     def train(self, error_func=nn.CrossEntropyLoss, learn_rate = 0.01, epochs = 10, begin = 0, end = 100,
                             f_step = 0.1, reg_f=True, alpha_f=0.01, reg_c= True, alpha_c = 0.01, batch_size = 1, graph=False):
@@ -160,6 +161,7 @@ class ellipse:
 def main():
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # //GPU USED HERE - device selected based on CUDA availability
     # Assume that we are on a CUDA machine, then this should print a CUDA device:
     print(device)
 

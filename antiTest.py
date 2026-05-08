@@ -16,6 +16,7 @@ start_time = time.time()
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# //GPU USED HERE - device selected based on CUDA availability
 
 # Assume that we are on a CUDA machine, then this should print a CUDA device:
 
@@ -68,6 +69,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size= batch_size,
 anti_res = anti.AntiSymResNet(device, N, num_features, num_classes, torch.tanh, F.softmax, gamma = gamma, gpu = gpu)
 #if gpu flag set to true then send model parameters to gpu
 if gpu == True:
+    # //GPU USED HERE - move model parameters to GPU
     anti_res.to(device)
 
 #train model

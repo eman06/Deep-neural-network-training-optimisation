@@ -13,6 +13,7 @@ import copy
 
 # ==================== OPTIMIZATION FLAGS ====================
 USE_MIXED_PRECISION = torch.cuda.is_available()  # Enable mixed precision on GPU
+# //GPU USED HERE - CUDA availability checked
 USE_GRADIENT_ACCUMULATION = False  # Accumulate gradients over multiple batches
 BENCHMARK_MODE = True  # Enable cuDNN benchmarking for consistent GPU performance
 
@@ -186,7 +187,9 @@ class ResNet(nn.Module):
                         self.directions = ResNet.mult_mu(copy.deepcopy(directions), mu, steps)
                                     
                     if self.gpu == True:
+                        # //GPU USED HERE - moving batch to GPU device
                         inputs, labels = inputs.to(self.device), labels.to(self.device)
+                        # //GPU USED HERE - synchronizing CUDA
                         torch.cuda.synchronize()
                    
                     if self.conv == False:                   
@@ -202,6 +205,7 @@ class ResNet(nn.Module):
                     #clear gradient buffers
                     optimiser.zero_grad()     
                     if torch.cuda.is_available():
+                        # //GPU USED HERE - synchronizing CUDA
                         torch.cuda.synchronize()
                     tmp_forward = time.perf_counter()
                     
@@ -216,6 +220,7 @@ class ResNet(nn.Module):
                     # =====================================================================
                     
                     if torch.cuda.is_available():
+                        # //GPU USED HERE - synchronizing CUDA
                         torch.cuda.synchronize()
                     forward_t += time.perf_counter() - tmp_forward
                     #add forward propagation regularisation term

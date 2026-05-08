@@ -127,6 +127,7 @@ class InMemDataLoader:
         """
         
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")        
+        # //GPU USED HERE - device selected based on CUDA availability
         
         if self.dataset == "ELLIPSE":
             a = np.array([[0,1.0],[1.0,2.0]])            
@@ -217,9 +218,11 @@ class InMemDataLoader:
         """
         # Use optimized defaults
         if num_workers is None:
+            # //GPU USED HERE - use multi-worker dataloading when CUDA is available
             num_workers = DEFAULT_NUM_WORKERS if torch.cuda.is_available() else 0
         
         if pin_memory is None:
+            # //GPU USED HERE - pin memory for faster GPU transfer when CUDA available
             pin_memory = PIN_MEMORY and torch.cuda.is_available()
         
         dataset = self.getDataset(train)

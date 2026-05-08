@@ -39,6 +39,7 @@ def main(argv):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # //GPU USED HERE - device selected based on CUDA availability
     print(device)
     
     dataset_name = "MNIST" # choose from MNIST, CIFAR10, CIFAR100, ELLIPSE, SWISS
@@ -86,12 +87,15 @@ def main(argv):
     loader = dataloader.getDataLoader(batch_size, shuffle = True, num_workers = 0, pin_memory = True, train = True)         
     #train
     if gpu == True:
+        # //GPU USED HERE - move model parameters to GPU
         model.to(device)
         if torch.cuda.is_available():
+            # //GPU USED HERE - synchronizing CUDA
             torch.cuda.synchronize()
     train_time = time.perf_counter()
     model.train(loader, error_func, learn_rate, epochs, begin, end, step, reg_f, alpha_f, reg_c, alpha_c, graph)
     if gpu == True and torch.cuda.is_available():
+        # //GPU USED HERE - synchronizing CUDA
         torch.cuda.synchronize()
     train_time = time.perf_counter() - train_time
     

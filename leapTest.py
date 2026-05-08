@@ -16,6 +16,7 @@ def main():
     start_time = time.time()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # //GPU USED HERE - device selected based on CUDA availability
 
     print(device)
     torch.set_printoptions(precision=10)
@@ -64,6 +65,7 @@ def main():
 
 
     leap = lp.Leapfrog(device,N, num_features, num_classes, torch.tanh, F.softmax, gpu = gpu)
+    # //GPU USED HERE - move model parameters to GPU
     leap.to(device)
     
     leap.train(trainloader, error_func, learn_rate, epochs, begin, end, step, reg_f, alpha_f, reg_c, alpha_c, graph)

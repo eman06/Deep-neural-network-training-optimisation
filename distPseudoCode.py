@@ -99,6 +99,7 @@ def main():
         
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # //GPU USED HERE - device selected based on CUDA availability
     
     dataloader = dl.InMemDataLoader(dataset_name, conv_sg=conv)
         
@@ -129,6 +130,7 @@ def main():
     #train_network
     #torch.cuda.synchronize()
     #start_time = time.perf_counter()
+    # //GPU USED HERE - distributed training may use GPU inside complexNet.distTrain
     train_time = complexNet.distTrain(loader, error_func, learn_rate, epochs, begin, end
                     ,f_step, reg_f, alpha_f, reg_c, alpha_c, graph, False, M)
     

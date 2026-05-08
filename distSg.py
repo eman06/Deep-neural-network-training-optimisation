@@ -43,7 +43,8 @@ def main(argv):
     
     #complex net parameters
     M = 2  
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")     
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")    
+    # //GPU USED HERE - device selected based on CUDA availability
     #---------------training data--------------------
       
          
@@ -115,6 +116,7 @@ def main(argv):
     #accBefore = complexNet.test(loader, begin = 0, end = 10000, f_step = f_step)
     
     #train model with distributed algorithm
+    # //GPU USED HERE - distributed training may utilize GPU inside distTrain
     train_time = complexNet.distTrain(loader, error_func, learn_rate, epochs, begin, end
                     ,f_step, reg_f, alpha_f, reg_c, alpha_c, graph, False, M)   
     

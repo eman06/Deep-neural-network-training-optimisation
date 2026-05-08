@@ -75,6 +75,7 @@ class AntiSymResNet(res.ResNet):
         #create diffusion matrix    
         diffusion = gamma*torch.eye(layer.weight.shape[0])
         if self.gpu == True:
+            # //GPU USED HERE - move diffusion to model device (GPU) before subtracting
             mat -= diffusion.to(self.device)
         else:
             mat -= diffusion

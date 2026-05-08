@@ -101,6 +101,7 @@ def main(argv):
               "lr_f", learn_rate_f,  "step_f", f_step_f, "choice", choice, "graph", graph)      
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # //GPU USED HERE - device selected based on CUDA availability
     
     dataloader = dl.InMemDataLoader(dataset_name, conv_sg=conv)
         
@@ -123,10 +124,12 @@ def main(argv):
     complexNet.init_sgs(num_features=num_features, batch_size=batch_size)  
       
     #train coarse model 
+    # //GPU USED HERE - synchronizing CUDA before coarse training
     torch.cuda.synchronize()
     coarse_time = time.time()
     complexNet.train_multi_level(loader, error_func, learn_rate_c, epochs, begin, end
                      ,f_step_c, reg_f, alpha_f, reg_c, alpha_c, graph = False)
+    # //GPU USED HERE - synchronizing CUDA after coarse training
     torch.cuda.synchronize()
     coarse_time = time.time() - coarse_time
     
@@ -137,6 +140,7 @@ def main(argv):
     complexNet.double_complex_net()    
     
     #train model with distributed algorithm
+    # //GPU USED HERE - distributed training may utilize GPU inside distTrain
     train_time = complexNet.distTrain(loader, error_func, learn_rate_f, epochs, begin, end
                     ,f_step_f, reg_f, alpha_f, reg_c, alpha_c, graph, False, M) 
         
