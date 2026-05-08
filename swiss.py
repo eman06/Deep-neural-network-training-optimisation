@@ -89,7 +89,7 @@ def main():
 
     reg_f = False
     reg_c = False
-    gpu = True
+    gpu = False
     #-----------hyper parameters
     learn_rate = 0.5
     step = 1# 0.00005
