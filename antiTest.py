@@ -45,7 +45,7 @@ alpha = 0.001
 epochs = 10#200#000
 gamma = 0.01
 
-gpu = False
+gpu = True
 
 N = 16#50
 batch_size = 250#000#60000

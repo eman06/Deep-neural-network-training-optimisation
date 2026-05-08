@@ -13,7 +13,7 @@ import ResNet as res
 class AntiSymResNet(res.ResNet):
 
 
-    def __init__(self, device, N, num_features, num_classes, func_f, func_c, weights = None, bias = None, gamma = 0.01, gpu = False):
+    def __init__(self, device, N, num_features, num_classes, func_f, func_c, weights = None, bias = None, gamma = 0.01, gpu = True):
         """
         It is initialised with
             N - number of layers

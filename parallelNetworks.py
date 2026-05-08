@@ -30,7 +30,7 @@ class complexNeuralNetwork:
     and (M-1) synthetic gradient modules.     
     """
     
-    def __init__(self, device, M=2, gpu=False, conv=False, in_chns=1, n_filters = 6):
+    def __init__(self, device, M=2, gpu=True, conv=False, in_chns=1, n_filters = 6):
         """
         device - gpu
         M - number of neural networks , (M-1) synthetic gradient modules
@@ -77,7 +77,7 @@ class complexNeuralNetwork:
     
             return model
     
-    def create_sg(self, gpu=False, num_features=2):
+    def create_sg(self, gpu=True, num_features=2):
         #creates sg module
         return syn.synthetic_module(self.__device, gpu, num_features, self.__conv, self.__in_chns, self.__n_filters)
     

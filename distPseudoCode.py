@@ -46,7 +46,7 @@ M = 2
 dataset_name = "ELLIPSE" # choose from MNIST, CIFAR10, CIFAR100, ELLIPSE, SWISS
 choice = 'r'
 conv= False
-gpu = False
+gpu = True
 
  #neural net parameters---------------------------------------------------------
 

@@ -27,7 +27,7 @@ class ResNet(nn.Module):
         """ The ResNet class inherits from the nn.Module class.
         """
         def __init__(self, device, N, num_features, num_classes, func_f, func_c, weights = None, bias = None, 
-                     gpu=False, last=True, conv=False, first = True, in_chns=1, n_filters = 6):
+                     gpu=True, last=True, conv=False, first = True, in_chns=1, n_filters = 6):
             """
             It is initialised with
             N - number of layers
