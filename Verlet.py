@@ -14,7 +14,7 @@ import ResNet as res
 class Verlet(res.ResNet):
 
     def __init__(self, device, N, num_features, num_classes, func_f, func_c, weights = None, bias = None, 
-                     gpu=True, last=True, conv=False, first = True, in_chns=1, n_filters = 6):
+                     gpu=False, last=True, conv=False, first = True, in_chns=1, n_filters = 6):
         """
          It is initialised with
             N - number of layers
